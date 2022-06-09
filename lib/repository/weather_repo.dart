@@ -5,7 +5,6 @@ import 'package:weather/api/apis_paths.dart';
 import 'package:weather/api/app_config.dart';
 import 'package:weather/models/weather_model.dart';
 import 'package:weather/models/weather_response_model.dart';
-import 'package:weather/shared/local/cache_helper.dart';
 
 class WeatherRepo {
   static Future<WeatherResponse> getWeatherInfo(

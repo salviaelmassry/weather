@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:intl/intl.dart';
-import 'package:location/location.dart';
 import 'package:weather/bloc/weather_bloc/weather_bloc.dart';
 import 'package:weather/models/weather_model.dart';
 import 'package:weather/resources/app_color.dart';
