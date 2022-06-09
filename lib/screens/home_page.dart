@@ -9,6 +9,7 @@ import 'package:weather/resources/app_color.dart';
 import 'package:weather/shared/components/app_loading.dart';
 import 'package:weather/shared/components/snack_bar.dart';
 import 'package:weather/shared/components/text_display.dart';
+import 'package:weather/shared/local/cache_helper.dart';
 
 class HomePage extends StatefulWidget {
   final Coord coord;
@@ -19,10 +20,25 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
+  WeatherBloc weatherBloc = WeatherBloc();
+  WeatherModel? weatherModel;
+
+  @override
+  void initState() {
+    super.initState();
+    try {
+      CacheHelper.getStoredWeatherInfo().then((value) {
+        setState(() {
+          weatherModel = value;
+        });
+      });
+    } catch (e) {
+      print(e);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    WeatherBloc weatherBloc = WeatherBloc();
-
     return Scaffold(
       appBar: AppBar(
           title: AppTextDisplay(
@@ -32,13 +48,14 @@ class _HomePageState extends State<HomePage> {
         color: AppColors.white,
       )),
       bottomSheet:
-         RequestWeatherButton(weatherBloc: weatherBloc, coord: widget.coord),
+          RequestWeatherButton(weatherBloc: weatherBloc, coord: widget.coord),
       body: SizedBox(
         width: double.infinity,
         child: Padding(
           padding: EdgeInsets.symmetric(vertical: 10.h),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               BlocProvider<WeatherBloc>.value(
                 value: weatherBloc,
@@ -53,18 +70,39 @@ class _HomePageState extends State<HomePage> {
                   },
                   builder: (BuildContext context, WeatherState state) {
                     if (state is WeatherLoadingState) {
-                      return const Center(child: LoadingWidget());
+                      return const LoadingWidget();
                     } else if (state is WeatherSuccessState) {
                       return CentredAlignedCard(
                           weatherModel: state.weatherModel);
                     }
-                    return AppTextDisplay(
-                      text: 'Request Current City Weather Info',
-                      softWrap: true,
-                      fontSize: 15.sp,
-                      fontWeight: FontWeight.w500,
-                      color: AppColors.chambray,
-                    );
+                    return weatherModel != null
+                        ? Column(
+                            children: [
+                              CentredAlignedCard(weatherModel: weatherModel!),
+                              SizedBox(
+                                height: 20.h,
+                              ),
+                              Padding(
+                                padding: EdgeInsets.symmetric(horizontal: 10.w),
+                                child: AppTextDisplay(
+                                  text:
+                                      'This is your last requested weather info, please click on GET WEATHER button to get weather info of your current city',
+                                  softWrap: false,
+                                  maxLines: 4,
+                                  fontSize: 15.sp,
+                                  fontWeight: FontWeight.w500,
+                                  color: AppColors.chambray,
+                                ),
+                              )
+                            ],
+                          )
+                        : AppTextDisplay(
+                            text: 'Request Current City Weather Info',
+                            softWrap: true,
+                            fontSize: 15.sp,
+                            fontWeight: FontWeight.w500,
+                            color: AppColors.chambray,
+                          );
                   },
                 ),
               ),
@@ -84,25 +122,6 @@ class RequestWeatherButton extends StatelessWidget {
   final WeatherBloc weatherBloc;
   final Coord coord;
 
-  Future<Coord> _getCurrentLocation() async {
-    final Location? location;
-
-    location = Location();
-
-    try {
-      await location.requestPermission();
-      final LocationData _locationResult = await location.getLocation();
-      return Coord(
-          lat: _locationResult.latitude,
-          lon: _locationResult.longitude);
-
-    } catch (e) {
-      print(e);
-    }
-    return Coord(
-        lat: 31.205753,
-        lon: 29.924526);
-  }
   @override
   Widget build(BuildContext context) {
     return Row(
